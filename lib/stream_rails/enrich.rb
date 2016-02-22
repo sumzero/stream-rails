@@ -45,9 +45,9 @@ module StreamRails
       end
     end
 
-    def enrich_activities(activities)
+    def enrich_activities(activities, opts={})
       references = collect_references(activities)
-      objects = retrieve_objects(references)
+      objects = retrieve_objects(references, opts[:serialize])
       inject_objects(activities, objects)
     end
 
@@ -76,8 +76,15 @@ module StreamRails
       model_refs
     end
 
-    def retrieve_objects(references)
-      Hash[references.map { |model, ids| [model, Hash[model.classify.constantize.where(id: ids.keys).map { |i| [i.id.to_s, i] }]] }]
+    def retrieve_objects(references, serialize=false)
+      Hash[
+        references.map do |model, ids|
+          klass = model.classify.constantize
+          models = klass.includes(defined?(klass::ACTIVITY_INCLUDES_HASH) && klass::ACTIVITY_INCLUDES_HASH).where(id: ids.keys)
+          models.map! { |model| "#{model.classify}ActivitySerializer".constantize.new(model).serializable_hash } if serialize && Math.const_defined?("#{model.classify}ActivitySerializer")
+          [model, Hash[models.map { |i| [i.id.to_s, i] }]]
+        end
+      ]
     end
 
     def inject_objects(activities, objects)
