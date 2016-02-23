@@ -91,7 +91,7 @@ module StreamRails
 
     def serialize_models(models)
       begin
-        return models.map { |model_obj| "#{model.classify}ActivitySerializer".constantize.new(model_obj).serializable_hash }
+        return models.map { |model_obj| "#{model_obj.class}ActivitySerializer".constantize.new(model_obj).serializable_hash }
       rescue NameError
         return models
       end
