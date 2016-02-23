@@ -82,12 +82,17 @@ module StreamRails
           klass = model.classify.constantize
           models = klass.includes(defined?(klass::ACTIVITY_INCLUDES_HASH) && klass::ACTIVITY_INCLUDES_HASH).where(id: ids.keys)
           if serialize
-            serialized = models.map { |model_obj| "#{model.classify}ActivitySerializer".constantize.new(model_obj).serializable_hash }
-            models = serialized.map { |i| [i[:id], i] }
-          else
-            models.map! { |i| [i.id.to_s, i] }
+            models.map! { |model| "#{model.classify}ActivitySerializer".constantize.new(model).serializable_hash }
           end
-          [model, Hash[models]]
+          [model, Hash[
+            models.map do |i|
+              if i.is_a?(Hash)
+                [i[:id].to_s, i]
+              else
+                [i.id.to_s, i]
+              end
+            end
+          ]]
         end
       ]
     end
