@@ -87,7 +87,7 @@ module StreamRails
               models = serialized
             end
           ensure
-            [model, Hash[models.map { |i| [i.id.to_s, i] }]]
+            [model, Hash[models.map { |i| [i.is_a?(Hash) ? i[:id] : i.id.to_s, i] }]]
           end
         end
       ]
