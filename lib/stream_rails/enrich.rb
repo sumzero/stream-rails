@@ -90,11 +90,7 @@ module StreamRails
     end
 
     def serialize_models(models)
-      begin
-        return models.map { |model_obj| "#{model_obj.class}ActivitySerializer".constantize.new(model_obj).serializable_hash }
-      rescue NameError
-        return models
-      end
+      models.map { |model_obj| "#{model_obj.class.name}ActivitySerializer".constantize.new(model_obj).serializable_hash }
     end
 
     def inject_objects(activities, objects)
