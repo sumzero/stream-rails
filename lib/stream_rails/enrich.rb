@@ -77,20 +77,20 @@ module StreamRails
     end
 
     def retrieve_objects(references, serialize=false)
-      mapped = references.map do |model, ids|
-        klass = model.classify.constantize
-        models = klass.includes(defined?(klass::ACTIVITY_INCLUDES_HASH) && klass::ACTIVITY_INCLUDES_HASH).where(id: ids.keys)
-        if serialize
-          serialized = serialize_models(models)
-          models = serialized
+      Hash[
+        references.map do |model, ids|
+          klass = model.classify.constantize
+          models = klass.includes(defined?(klass::ACTIVITY_INCLUDES_HASH) && klass::ACTIVITY_INCLUDES_HASH).where(id: ids.keys)
+          begin
+            if serialize
+              serialized = models.map { |model_obj| "#{model.classify}ActivitySerializer".constantize.new(model_obj).serializable_hash }
+              models = serialized
+            end
+          ensure
+            [model, Hash[models.map { |i| [serialize ? i[:id] : i.id.to_s, i] }]]
+          end
         end
-        [model, Hash[models.map { |i| [i.is_a?(Hash) ? i[:id] : i.id.to_s, i] }]]
-      end
-      Hash[mapped]
-    end
-
-    def serialize_models(models)
-      models.map { |model_obj| "#{model_obj.class.name}ActivitySerializer".constantize.new(model_obj).serializable_hash }
+      ]
     end
 
     def inject_objects(activities, objects)
