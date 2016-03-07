@@ -80,6 +80,7 @@ module StreamRails
       Hash[
         references.map do |model, ids|
           klass = model.classify.constantize
+          byebug if klass == FeaturedItem
           models = klass.includes(defined?(klass::ACTIVITY_INCLUDES_HASH) && klass::ACTIVITY_INCLUDES_HASH).where(id: ids.keys)
           if serialize
             models = models.map { |model_obj| "#{model.classify}ActivitySerializer".constantize.new(model_obj).serializable_hash }
